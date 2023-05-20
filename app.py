@@ -1,30 +1,65 @@
-from typing import Tuple, List, Dict, Optional
-from flask import Flask, render_template, request, redirect
+from typing import List, Optional
 
-app = Flask(__name__, template_folder="templates", static_folder='static', static_url_path='')
+from flask import Flask, redirect, render_template, request
 
-todos: List[Dict] = []
+app = Flask(
+    __name__, template_folder="templates", static_folder="static", static_url_path=""
+)
 
-@app.route('/')
+
+class Todo:
+    content: str
+    completed: bool
+
+    def __init__(self, content: str):
+        self.content = content
+        self.completed = False
+
+    def complete(self):
+        self.completed = True
+
+    def to_dict(self):
+        return {"content": self.content, "completed": self.completed}
+
+
+todos: List[Todo] = []
+
+
+@app.route("/")
 def index():
-    return render_template('index.html', todos=todos)
+    return render_template(
+        "index.html", todos=list(map(lambda todo: todo.to_dict(), todos))
+    )
 
-@app.route('/add', methods=['POST'])
+
+@app.route("/add", methods=["POST"])
 def add():
-    todo: str = request.form.get('todo')
-    todos.append({'content': todo, 'completed': False})
+    content: Optional[str] = request.form.get("todo")
+
+    if content is not None:
+        todo = Todo(content=content)
+        todos.append(todo)
+    else:
+        print("No content provided")
     print(todos)
-    return redirect('/')
+    return redirect("/")
 
-@app.route('/complete', methods=['POST'])
+
+@app.route("/complete", methods=["POST"])
 def complete():
-    todo_index = int(request.form.get('index'))
-    try:
-        todos[todo_index]['completed'] = True
-        print(todos)
-    except:
-        print("No TODO matched")
-    return redirect('/')
+    index: Optional[str] = request.form.get("index")
+    if index is not None:
+        todo_index = int(index)
+        try:
+            todos[todo_index].complete()
+            print(todos)
+        except Exception:
+            print("No TODO matched")
+    else:
+        print("No index provided")
 
-if __name__ == '__main__':
+    return redirect("/")
+
+
+if __name__ == "__main__":
     app.run(port=8080, debug=True)
