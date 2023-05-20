@@ -9,11 +9,10 @@ app = Flask(
 
 class Todo:
     content: str
-    completed: bool
+    completed: bool = False
 
     def __init__(self, content: str):
         self.content = content
-        self.completed = False
 
     def complete(self):
         self.completed = True
